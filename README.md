@@ -45,7 +45,7 @@ Most public RAG demos stop at "embed some text, ask a question." This project go
                           └──────┬──────┘
                      ┌───────────┴────────────┐
                      ▼                        ▼
-              ┌─────────────┐         ┌───────────────┐
+              ┌─────────────┐         ┌────────────────┐
               │ simple RAG  │         │  supervisor    │
               │ (LCEL chain)│         │  (multi-agent) │
               └──────┬──────┘         └───────┬────────┘
