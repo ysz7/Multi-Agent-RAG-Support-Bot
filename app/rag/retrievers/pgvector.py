@@ -1,8 +1,8 @@
 """pgvector-backed store: the default (and only bundled) vector backend.
 
-This module owns both halves of the pgvector collection. The write path
-(`upsert_document`) lands in Phase 4 so indexing can run end to end; the read
-path (`similarity_search`) arrives in Phase 5.
+This module owns both halves of the pgvector collection: the write path
+(`upsert_document`, used by the indexer) and the read path
+(`PgVectorRetriever.similarity_search`, used by the RAG chain).
 
 Idempotency: a document's identity is `(tenant_id, content_hash)`. Re-indexing
 unchanged bytes is a no-op. An edited file keeps its `source_path` but changes
@@ -20,6 +20,7 @@ from psycopg.types.json import Jsonb
 
 from app.core.config import Settings, get_settings
 from app.rag.chunking import Chunk, LoadedDocument
+from app.rag.retrievers.base import RetrievedChunk, RetrieverError
 
 
 class IndexOutcome(StrEnum):
@@ -145,3 +146,99 @@ class PgVectorStore:
                 {"t": tenant_id},
             )
             return dict(await cursor.fetchone())
+
+
+class PgVectorRetriever:
+    """Read path over the same tables the indexer writes.
+
+    Holds a connection pool because it is used per-request by the API, unlike
+    `PgVectorStore` whose caller (a one-shot script) owns its connection.
+    """
+
+    name = "pgvector"
+
+    def __init__(self, settings: Settings | None = None) -> None:
+        self._settings = settings or get_settings()
+        self._pool = None
+
+    async def _get_pool(self):
+        if self._pool is None:
+            from pgvector.psycopg import register_vector_async
+            from psycopg_pool import AsyncConnectionPool
+
+            async def configure(connection: AsyncConnection) -> None:
+                await register_vector_async(connection)
+
+            self._pool = AsyncConnectionPool(
+                self._settings.database_url,
+                min_size=1,
+                max_size=self._settings.db_pool_max_size,
+                kwargs={"row_factory": dict_row},
+                configure=configure,
+                open=False,
+            )
+            await self._pool.open(wait=True)
+        return self._pool
+
+    async def similarity_search(
+        self,
+        query_embedding: list[float],
+        *,
+        tenant_id: str,
+        top_k: int | None = None,
+        filters: dict | None = None,
+    ) -> list[RetrievedChunk]:
+        if len(query_embedding) != self._settings.embedding_dim:
+            raise RetrieverError(
+                f"query embedding has {len(query_embedding)} dims, "
+                f"expected {self._settings.embedding_dim}"
+            )
+
+        limit = top_k or self._settings.retrieval_top_k
+        # tenant_id is always a bound parameter and always applied, regardless
+        # of what the caller passes in `filters`.
+        params: dict = {"tenant": tenant_id, "embedding": query_embedding, "limit": limit}
+        filter_sql = ""
+        if filters:
+            filter_sql = " AND c.metadata @> %(filters)s"
+            params["filters"] = Jsonb(filters)
+
+        sql = f"""
+            SELECT
+                c.id, c.content, c.chunk_index, c.metadata,
+                c.document_id, d.title, d.source_path,
+                1 - (c.embedding <=> %(embedding)s::vector) AS score
+            FROM chunks c
+            JOIN documents d ON d.id = c.document_id
+            WHERE c.tenant_id = %(tenant)s
+              AND c.embedding IS NOT NULL
+              {filter_sql}
+            ORDER BY c.embedding <=> %(embedding)s::vector
+            LIMIT %(limit)s
+        """
+
+        pool = await self._get_pool()
+        try:
+            async with pool.connection() as connection, connection.cursor() as cursor:
+                await cursor.execute(sql, params)
+                rows = await cursor.fetchall()
+        except Exception as exc:
+            raise RetrieverError(f"pgvector search failed: {exc}") from exc
+
+        return [
+            RetrievedChunk(
+                content=row["content"],
+                score=float(row["score"]),
+                chunk_index=row["chunk_index"],
+                document_id=str(row["document_id"]),
+                title=row["title"] or "",
+                source_path=row["source_path"],
+                metadata=row["metadata"] or {},
+            )
+            for row in rows
+        ]
+
+    async def aclose(self) -> None:
+        if self._pool is not None:
+            await self._pool.close()
+            self._pool = None

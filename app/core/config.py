@@ -61,6 +61,7 @@ class Settings(BaseSettings):
 
     # --- Retrieval ---------------------------------------------------------
     retrieval_top_k: int = 6
+    db_pool_max_size: int = 10
     chunk_size: int = 1000
     chunk_overlap: int = 150
     documents_dir: Path = Path("data/documents")
