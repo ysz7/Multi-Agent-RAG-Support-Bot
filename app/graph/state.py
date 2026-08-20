@@ -82,6 +82,10 @@ class GraphState(TypedDict, total=False):
     pending_action: PendingAction | None
     approval: ApprovalStatus | None
     approval_note: str | None
+    # Append-only audit trails. `executed_actions` is what makes a replayed run
+    # detectable: an action appears here exactly once.
+    executed_actions: Annotated[list[dict[str, Any]], operator.add]
+    rejected_actions: Annotated[list[dict[str, Any]], operator.add]
 
     # --- observability / failure -------------------------------------------
     trace_id: str | None

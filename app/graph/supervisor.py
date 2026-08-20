@@ -144,8 +144,11 @@ class SupervisorNode:
         if not findings:
             return {**update, "next_step": "research"}
 
-        # 2. An action was requested and none is pending -> propose it.
-        if needs_action and not state.get("pending_action"):
+        # 2. An action was requested, none is pending, and none has been
+        #    dispatched or refused yet -> propose it. The last condition is what
+        #    stops a completed action from being proposed a second time.
+        already_handled = bool(state.get("executed_actions") or state.get("rejected_actions"))
+        if needs_action and not state.get("pending_action") and not already_handled:
             return {**update, "next_step": "act"}
 
         # 3. No draft yet -> write one, then have it reviewed.
