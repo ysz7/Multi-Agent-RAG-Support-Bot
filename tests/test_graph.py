@@ -181,14 +181,18 @@ async def test_graph_routes_simple_question_end_to_end(env):
 
 
 async def test_graph_routes_action_request_to_supervisor(env):
+    from tests.supervisor_fakes import FakeTools
+
     chain = _FakeChain()
-    graph = build_graph(_settings(env), chain=chain, llm=_FakeLLM("SIMPLE"))
+    graph = build_graph(_settings(env), chain=chain, llm=_FakeLLM("SIMPLE"), tools=FakeTools())
     final = await graph.ainvoke(
         initial_state("Email me the refund policy", tenant_id="t1", user_id="u1")
     )
 
     assert final["route"] == "supervisor"
-    assert "[supervisor stub]" in final["route_reason"]
+    # The supervisor branch ran: it gathered findings and proposed the action.
+    assert final.get("findings")
+    assert final["pending_action"]["tool"] == "send_email"
 
 
 async def test_graph_accumulates_messages(env):

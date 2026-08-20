@@ -1,7 +1,7 @@
 """Graph nodes.
 
-Phase 8 ships the entry router and the simple-RAG branch. The supervisor branch
-is a clearly-marked stub that Phase 9 replaces with real specialist nodes.
+The entry router and the simple-RAG branch. The supervisor branch and its
+specialist nodes live in `app/graph/supervisor.py`.
 
 Routing is two-stage on purpose:
 
@@ -101,22 +101,6 @@ class SimpleRagNode:
             "chunks": answer.chunks,
             "messages": [{"role": "assistant", "content": answer.text}],
         }
-
-
-class SupervisorStubNode:
-    """Placeholder for the Phase 9 multi-agent branch.
-
-    Answers via the simple chain so the graph is runnable end to end, and marks
-    the state so it is obvious this is not the real supervisor yet.
-    """
-
-    def __init__(self, chain: RagChain) -> None:
-        self._delegate = SimpleRagNode(chain)
-
-    async def __call__(self, state: GraphState) -> GraphState:
-        logger.info("supervisor stub handling question (Phase 9 replaces this)")
-        result = await self._delegate(state)
-        return {**result, "route_reason": f"{state.get('route_reason', '')} [supervisor stub]"}
 
 
 def select_branch(state: GraphState) -> str:
