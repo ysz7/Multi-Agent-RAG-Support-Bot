@@ -1,0 +1,33 @@
+# Planning (local only)
+PLAN.md
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Data & artifacts
+data/documents/*
+!data/documents/.gitkeep
+evals/results/
+*.log
+
+# Docker / local volumes
+.docker-data/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
