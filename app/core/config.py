@@ -37,6 +37,16 @@ class Settings(BaseSettings):
     claude_model: str = "claude-opus-5"
     ollama_model: str = "llama3.1"
     ollama_base_url: str = "http://localhost:11434"
+    # Cap on generated tokens. Reasoning models spend part of this budget on
+    # `message.thinking`, so a small value can yield an empty answer.
+    ollama_num_predict: int = 2048
+    ollama_timeout_s: float = 300.0
+    # Cap, not a target — Claude stops at end_turn.
+    claude_max_tokens: int = 16000
+    # Thinking depth / token spend. "medium" keeps support answers responsive.
+    claude_effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
+    # Re-route server-side if a safety classifier declines, instead of erroring.
+    claude_refusal_fallback: bool = True
 
     # --- Embeddings --------------------------------------------------------
     embedding_model: str = "nomic-embed-text"

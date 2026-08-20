@@ -63,3 +63,4 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 filterwarnings = ["ignore::DeprecationWarning"]
+markers = ["live: talks to a real Ollama/Claude backend (deselect with -m 'not live')"]
