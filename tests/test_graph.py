@@ -38,6 +38,13 @@ class _FakeChain:
         self.answer = answer
         self.seen: list[dict] = []
 
+    async def astream(self, question, *, tenant_id, **kwargs):
+        """Mirrors RagChain.astream: text pieces, then the final RagAnswer."""
+        answer = await self.ainvoke(question, tenant_id=tenant_id, **kwargs)
+        for word in answer.text.split(" "):
+            yield word + " "
+        yield answer
+
     async def ainvoke(self, question, *, tenant_id, **kwargs):
         self.seen.append({"question": question, "tenant_id": tenant_id})
         chunk = RetrievedChunk(

@@ -79,18 +79,45 @@ class RouterNode:
         return {"route": "simple", "route_reason": "unparseable classification"}
 
 
+def _stream_writer():
+    """LangGraph's per-run token sink, or None outside a streaming run."""
+    try:
+        from langgraph.config import get_stream_writer
+
+        return get_stream_writer()
+    except Exception:  # not inside a graph run, or streaming not requested
+        return None
+
+
 class SimpleRagNode:
-    """Single-shot RAG answer, wrapping the Phase 6 LCEL chain."""
+    """Single-shot RAG answer, wrapping the Phase 6 LCEL chain.
+
+    Streams tokens through LangGraph's custom stream when one is active, so the
+    API can forward them over SSE; falls back to a plain invoke otherwise.
+    """
 
     def __init__(self, chain: RagChain) -> None:
         self._chain = chain
 
     async def __call__(self, state: GraphState) -> GraphState:
         try:
-            answer = await self._chain.ainvoke(
-                state["question"],
-                tenant_id=state["tenant_id"],  # from Principal, never from the question
-            )
+            writer = _stream_writer()
+            if writer is None:
+                answer = await self._chain.ainvoke(
+                    state["question"],
+                    tenant_id=state["tenant_id"],  # from Principal, not the question
+                )
+            else:
+                answer = None
+                async for piece in self._chain.astream(
+                    state["question"], tenant_id=state["tenant_id"]
+                ):
+                    if isinstance(piece, str):
+                        writer({"type": "token", "text": piece})
+                    else:
+                        answer = piece
+                if answer is None:
+                    raise RuntimeError("stream ended without a final answer")
         except Exception as exc:
             logger.exception("simple rag node failed")
             return {"error": f"{type(exc).__name__}: {exc}", "answer": "", "messages": []}

@@ -249,6 +249,11 @@ async def test_simple_questions_never_reach_the_gate(env):
 
             return RagAnswer(text="Plain answer.", citations=[], chunks=[])
 
+        async def astream(self, question, *, tenant_id, **kwargs):
+            answer = await self.ainvoke(question, tenant_id=tenant_id, **kwargs)
+            yield answer.text
+            yield answer
+
     graph = build_graph(
         _settings(env), llm=llm, tools=tools, chain=_Chain(), checkpointer=InMemorySaver()
     )
