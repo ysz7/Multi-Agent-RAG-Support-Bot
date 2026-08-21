@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     # `message.thinking`, so a small value can yield an empty answer.
     ollama_num_predict: int = 2048
     ollama_timeout_s: float = 300.0
+    # Reasoning models spend most of `num_predict` on `message.thinking`. Turning
+    # thinking off is 30x faster on judge-style prompts and is what the evaluation
+    # harness uses; the answer path keeps it on. Only sent when False, because
+    # models without a thinking mode reject the parameter.
+    ollama_think: bool = True
     # Cap, not a target — Claude stops at end_turn.
     claude_max_tokens: int = 16000
     # Thinking depth / token spend. "medium" keeps support answers responsive.

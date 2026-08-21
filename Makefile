@@ -1,6 +1,6 @@
 COMPOSE ?= docker compose
 
-.PHONY: help up up-db down clean logs ps health wait test lint fmt
+.PHONY: help up up-db down clean logs ps health wait test lint fmt evals
 
 help:
 	@grep -E '^[a-z-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -49,6 +49,9 @@ test:  ## Run the test suite
 
 lint:  ## Lint and format check
 	.venv/bin/ruff check . && .venv/bin/ruff format --check .
+
+evals:  ## Score the golden dataset with RAGAS (needs postgres + a model)
+	.venv/bin/python -m evals.run_ragas --min-faithfulness 0.85 --min-context-recall 0.60
 
 fmt:  ## Auto-format
 	.venv/bin/ruff format . && .venv/bin/ruff check --fix .

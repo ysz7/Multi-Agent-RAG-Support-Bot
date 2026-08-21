@@ -39,7 +39,11 @@ qdrant = ["qdrant-client>=1.12"]
 # Only needed when AUTH_MODE=jwt.
 jwt = ["python-jose[cryptography]>=3.3"]
 # Evaluation harness (Phase 13); heavy, kept out of the runtime install.
-evals = ["ragas>=0.2", "datasets>=3.0"]
+# Pinned to the 0.4 line: the metrics we use live in `ragas.metrics.collections`
+# and take an `InstructorBaseRagasLLM`, which is a 0.4 interface. Note that this
+# extra drags in `openai` and `langchain-openai` transitively — see evals/judge.py
+# for why nothing here ever talks to them.
+evals = ["ragas>=0.4,<0.5", "datasets>=3.0"]
 dev = [
     "pytest>=8.3",
     "pytest-asyncio>=0.24",

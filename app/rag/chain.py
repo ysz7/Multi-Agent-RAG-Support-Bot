@@ -136,6 +136,20 @@ def extract_citations(answer: str, chunks: list[RetrievedChunk]) -> list[Citatio
     return [seen[key] for key in sorted(seen)]
 
 
+def split_system(messages: list[ChatMessage]) -> tuple[str | None, list[ChatMessage]]:
+    """Peel the system turn off a rendered prompt.
+
+    Providers disagree about where a system prompt goes: Ollama wants it as the
+    first message, Anthropic rejects that and requires the top-level `system`
+    parameter. `LLMProvider.chat(messages, system=...)` is the neutral form, so
+    the chain hands the system text over separately and lets each provider place
+    it. Rendering it as part of the template stays — that is what keeps the
+    instruction/data split visible in one place.
+    """
+    system = "\n\n".join(m["content"] for m in messages if m["role"] == "system") or None
+    return system, [m for m in messages if m["role"] != "system"]
+
+
 def build_prompt(question: str, context: str) -> list[ChatMessage]:
     """Render the LCEL prompt template into provider-neutral messages."""
     template = ChatPromptTemplate.from_messages([("system", "{system}"), ("human", USER_TEMPLATE)])
@@ -187,15 +201,16 @@ class RagChain:
             )
             return chunks
 
-    def _messages(self, payload: dict) -> list[ChatMessage]:
-        return build_prompt(payload["question"], format_context(payload["chunks"]))
+    def _messages(self, payload: dict) -> tuple[str | None, list[ChatMessage]]:
+        return split_system(build_prompt(payload["question"], format_context(payload["chunks"])))
 
     async def _generate(self, payload: dict) -> RagAnswer:
         chunks = payload["chunks"]
         if not chunks:
             return RagAnswer(text=NO_CONTEXT_ANSWER, provider=self._llm.name)
 
-        result = await self._llm.chat(self._messages(payload))
+        system, messages = self._messages(payload)
+        result = await self._llm.chat(messages, system=system)
         return RagAnswer(
             text=result.text,
             citations=extract_citations(result.text, chunks),
@@ -232,7 +247,8 @@ class RagChain:
             return
 
         parts: list[str] = []
-        async for piece in self._llm.stream(self._messages({**payload, "chunks": chunks})):
+        system, messages = self._messages({**payload, "chunks": chunks})
+        async for piece in self._llm.stream(messages, system=system):
             parts.append(piece)
             yield piece
 

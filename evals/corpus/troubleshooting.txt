@@ -1,0 +1,25 @@
+Northwind Cloud Troubleshooting Notes
+
+Login loop after SSO change
+If members are bounced back to the login page after an SSO configuration change,
+the identity provider metadata is stale. Re-upload the metadata XML and ask
+affected members to clear their session cookie. Sessions issued before the
+change remain valid for one hour.
+
+Missing webhook deliveries
+Check the deliveries tab before contacting support. Deliveries that never left
+the queue appear as "pending" for at most five minutes; anything older than that
+is a delivery failure and carries the HTTP status returned by the endpoint.
+
+Slow exports
+Exports larger than 1 GB are split into multiple files of 1 GB each and emailed
+as download links. The links expire after 48 hours.
+
+Duplicate records after import
+A repeated import creates duplicates only when the external ID column is absent.
+Re-run the import with the external ID column mapped, then use the merge tool.
+
+Two-factor lockout
+A member locked out of two-factor authentication is reset by an account owner
+from the members page. Support cannot reset two-factor authentication on behalf
+of a customer.

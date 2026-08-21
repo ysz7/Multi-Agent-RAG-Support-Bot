@@ -115,6 +115,35 @@ async def test_ollama_system_prompt_is_prepended(env):
     assert seen["stream"] is False
 
 
+async def test_ollama_think_is_only_sent_when_disabled(env):
+    """A model with no thinking mode rejects the key, so it is omitted by default."""
+    seen: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(json.loads(request.content))
+        return httpx.Response(200, json={"message": {"content": "ok"}})
+
+    provider = OllamaProvider(_settings(env), client=_mock_ollama(handler))
+    await provider.chat([{"role": "user", "content": "hi"}])
+    assert "think" not in seen[-1]
+
+    provider = OllamaProvider(_settings(env, OLLAMA_THINK="false"), client=_mock_ollama(handler))
+    await provider.chat([{"role": "user", "content": "hi"}])
+    assert seen[-1]["think"] is False
+
+
+async def test_ollama_max_tokens_overrides_the_configured_budget(env):
+    seen: dict = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.update(json.loads(request.content))
+        return httpx.Response(200, json={"message": {"content": "ok"}})
+
+    provider = OllamaProvider(_settings(env), client=_mock_ollama(handler))
+    await provider.chat([{"role": "user", "content": "hi"}], max_tokens=8192)
+    assert seen["options"]["num_predict"] == 8192
+
+
 async def test_ollama_stream_yields_content_deltas_only(env):
     lines = [
         {"message": {"content": "", "thinking": "The"}, "done": False},

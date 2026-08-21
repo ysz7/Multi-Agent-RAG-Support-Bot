@@ -1,0 +1,448 @@
+{
+  "version": 1,
+  "corpus": "evals/corpus",
+  "description": "Golden dataset for the Northwind Cloud fixture corpus. Every answerable question has ground truth stated verbatim in exactly the listed sources; out_of_scope questions have no answer in the corpus and the pipeline is expected to decline.",
+  "questions": [
+    {
+      "id": "refund-window",
+      "question": "How long do I have to request a refund?",
+      "reference": "Refunds are issued within 30 days of the original purchase. After 30 days only account credit is available.",
+      "expected_sources": [
+        "handbook.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "credit-expiry",
+      "question": "How long does account credit stay valid?",
+      "reference": "Account credit expires 12 months after it is issued.",
+      "expected_sources": [
+        "handbook.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "partial-refund",
+      "question": "What happens if I cancel an annual plan halfway through the year?",
+      "reference": "A partial refund applies: the unused whole months are refunded, but the current month is not.",
+      "expected_sources": [
+        "handbook.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "support-hours",
+      "question": "When is standard support staffed?",
+      "reference": "Standard support is staffed Monday to Friday, 08:00 to 20:00 UTC. Weekend cover is on-call only and handles Severity 1 incidents.",
+      "expected_sources": [
+        "handbook.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "sev1-response",
+      "question": "What is the first response target for a Severity 1 incident?",
+      "reference": "30 minutes, 24/7.",
+      "expected_sources": [
+        "handbook.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "sev3-response",
+      "question": "How quickly do you first reply to a Severity 3 ticket?",
+      "reference": "Within 1 business day.",
+      "expected_sources": [
+        "handbook.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "response-vs-resolution",
+      "question": "Do the response targets promise a resolution time?",
+      "reference": "No. Response targets apply to the first human reply, not to resolution.",
+      "expected_sources": [
+        "handbook.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "auto-escalation",
+      "question": "Does a Severity 1 ticket escalate on its own?",
+      "reference": "Yes. Severity 1 tickets escalate automatically after 60 minutes without a first response.",
+      "expected_sources": [
+        "handbook.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "account-deletion-grace",
+      "question": "Can an account deletion be undone?",
+      "reference": "Deletion runs after a 7-day grace period, during which the request can be cancelled by replying to the confirmation email. After it runs, deletion is irreversible.",
+      "expected_sources": [
+        "handbook.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "starter-price",
+      "question": "How much does the Starter plan cost?",
+      "reference": "19 USD per user per month, for up to 10 users, with community support.",
+      "expected_sources": [
+        "billing.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "team-limit",
+      "question": "How many users can the Team plan have?",
+      "reference": "Up to 200 users.",
+      "expected_sources": [
+        "billing.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "annual-discount",
+      "question": "Is there a discount for paying annually?",
+      "reference": "Yes, annual billing is discounted by 20% compared with paying monthly.",
+      "expected_sources": [
+        "billing.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "invoice-due",
+      "question": "When is an invoice due?",
+      "reference": "Invoices are issued on the first day of each billing period and are due 14 days after issue.",
+      "expected_sources": [
+        "billing.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "failed-payment",
+      "question": "What happens if a payment fails?",
+      "reference": "A failed payment is retried three times over 10 days before the account is suspended.",
+      "expected_sources": [
+        "billing.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "add-seats",
+      "question": "How are seats added mid-cycle charged?",
+      "reference": "Adding seats mid-cycle is prorated to the day and charged on the next invoice.",
+      "expected_sources": [
+        "billing.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "remove-seats",
+      "question": "Do I get money back if I remove seats?",
+      "reference": "No. Removing seats does not generate a refund; the seat count drops at the start of the next billing period.",
+      "expected_sources": [
+        "billing.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "payment-methods",
+      "question": "Which payment methods are accepted?",
+      "reference": "Credit card, SEPA direct debit, and bank transfer. Bank transfer is available on annual Enterprise contracts only, and cheques are not accepted.",
+      "expected_sources": [
+        "billing.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "vat-number",
+      "question": "What happens when I add an EU VAT number?",
+      "reference": "VAT is removed from future invoices under the reverse-charge rule. Past invoices are not reissued.",
+      "expected_sources": [
+        "billing.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "data-retention",
+      "question": "How long is customer data kept?",
+      "reference": "Customer data is retained for 24 months after the last account activity, then deleted automatically.",
+      "expected_sources": [
+        "security.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "audit-log-retention",
+      "question": "How long are audit logs retained on Enterprise?",
+      "reference": "24 months on Enterprise, compared with 12 months on Team.",
+      "expected_sources": [
+        "security.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "encryption",
+      "question": "How is data encrypted?",
+      "reference": "In transit with TLS 1.3 and at rest with AES-256. Encryption keys are rotated annually.",
+      "expected_sources": [
+        "security.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "sso-availability",
+      "question": "Which plan includes single sign-on, and which protocols are supported?",
+      "reference": "Single sign-on is available on the Enterprise plan and supports SAML 2.0 and OIDC.",
+      "expected_sources": [
+        "security.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "2fa-availability",
+      "question": "Is two-factor authentication available on every plan?",
+      "reference": "Yes. Two-factor authentication is available on every plan and can be enforced for all members by an account owner.",
+      "expected_sources": [
+        "security.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "scim",
+      "question": "Is SCIM provisioning available on the Team plan?",
+      "reference": "No. SCIM provisioning is Enterprise only.",
+      "expected_sources": [
+        "security.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "subprocessor-notice",
+      "question": "How much notice is given before a new subprocessor is added?",
+      "reference": "Customers are notified 30 days before a new subprocessor is added.",
+      "expected_sources": [
+        "security.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "incident-notification",
+      "question": "How quickly are customers told about a security incident?",
+      "reference": "Affected customers are notified within 72 hours of confirmation, and the post-incident report is published within 14 days.",
+      "expected_sources": [
+        "security.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "iso-27001",
+      "question": "Are you ISO 27001 certified?",
+      "reference": "No. Northwind Cloud is SOC 2 Type II certified, with reports available under NDA, but there is no ISO 27001 certification at this time.",
+      "expected_sources": [
+        "security.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "rate-limit-team",
+      "question": "What is the API rate limit on the Team plan?",
+      "reference": "600 requests per minute per token.",
+      "expected_sources": [
+        "api.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "rate-limit-exceeded",
+      "question": "What does the API return when I exceed the rate limit?",
+      "reference": "HTTP 429 with a Retry-After header in seconds.",
+      "expected_sources": [
+        "api.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "token-retrieval",
+      "question": "Can I look up an API token after creating it?",
+      "reference": "No. Tokens are shown once at creation and cannot be retrieved afterwards.",
+      "expected_sources": [
+        "api.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "pagination",
+      "question": "How many items does a list endpoint return per page?",
+      "reference": "50 by default and 200 at most, using cursor-based pagination. A missing next_cursor means the last page.",
+      "expected_sources": [
+        "api.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "webhook-signature",
+      "question": "How do I verify that a webhook really came from you?",
+      "reference": "Each delivery carries an X-Northwind-Signature header, an HMAC-SHA256 of the raw body using the endpoint's signing secret.",
+      "expected_sources": [
+        "api.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "webhook-retries",
+      "question": "How long are failed webhook deliveries retried?",
+      "reference": "With exponential backoff for up to 24 hours. An endpoint failing for 7 consecutive days is disabled automatically.",
+      "expected_sources": [
+        "api.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "api-409",
+      "question": "What does a 409 response mean?",
+      "reference": "The resource was modified concurrently and the request should be retried with a fresh version.",
+      "expected_sources": [
+        "api.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "owner-count",
+      "question": "How many account owners can a workspace have?",
+      "reference": "At most two account owners.",
+      "expected_sources": [
+        "onboarding.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "viewer-seat",
+      "question": "Does a viewer use up a paid seat?",
+      "reference": "No. Viewers have read-only access, do not consume a paid seat, and are free on every plan.",
+      "expected_sources": [
+        "onboarding.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "import-size",
+      "question": "What happens to a very large data import?",
+      "reference": "Imports up to 100 MB run immediately; larger imports are queued and run overnight. Imports are atomic, so a failed import leaves the workspace unchanged.",
+      "expected_sources": [
+        "onboarding.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "trial-length",
+      "question": "How long is the trial and does it need a credit card?",
+      "reference": "A trial lasts 14 days, requires no credit card, and includes Team plan features.",
+      "expected_sources": [
+        "onboarding.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "trial-end",
+      "question": "What happens after a trial ends without payment details?",
+      "reference": "The workspace becomes read-only for 30 days before it is scheduled for deletion.",
+      "expected_sources": [
+        "onboarding.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "sso-login-loop",
+      "question": "Members are stuck in a login loop after we changed the SSO settings. What should we do?",
+      "reference": "The identity provider metadata is stale: re-upload the metadata XML and ask affected members to clear their session cookie. Sessions issued before the change remain valid for one hour.",
+      "expected_sources": [
+        "troubleshooting.txt"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "export-links",
+      "question": "How long do export download links last?",
+      "reference": "48 hours. Exports larger than 1 GB are split into 1 GB files and emailed as download links.",
+      "expected_sources": [
+        "troubleshooting.txt"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "import-duplicates",
+      "question": "Why did re-running an import create duplicates?",
+      "reference": "A repeated import creates duplicates only when the external ID column is absent. Re-run with the external ID column mapped, then use the merge tool.",
+      "expected_sources": [
+        "troubleshooting.txt"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "2fa-lockout",
+      "question": "Can support reset two-factor authentication for a locked-out user?",
+      "reference": "No. Support cannot reset two-factor authentication on behalf of a customer; an account owner resets it from the members page.",
+      "expected_sources": [
+        "troubleshooting.txt"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "sso-plan-and-lockout",
+      "question": "We are on Team and want SSO with enforced two-factor. What can we actually have?",
+      "reference": "Single sign-on requires the Enterprise plan, but two-factor authentication is available on every plan and can be enforced for all members by an account owner.",
+      "expected_sources": [
+        "security.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "retention-vs-refund",
+      "question": "Which is longer, the refund window or the data retention period?",
+      "reference": "The data retention period of 24 months is far longer than the 30-day refund window.",
+      "expected_sources": [
+        "handbook.md",
+        "security.md"
+      ],
+      "kind": "answerable"
+    },
+    {
+      "id": "mobile-app",
+      "question": "Which mobile operating systems does the native app support?",
+      "reference": "The documents do not cover a mobile app.",
+      "expected_sources": [],
+      "kind": "out_of_scope"
+    },
+    {
+      "id": "ceo-name",
+      "question": "Who is the CEO of Northwind Cloud?",
+      "reference": "The documents do not say who the CEO is.",
+      "expected_sources": [],
+      "kind": "out_of_scope"
+    },
+    {
+      "id": "on-prem",
+      "question": "Can I run Northwind Cloud on my own servers?",
+      "reference": "The documents do not cover self-hosting or on-premise deployment.",
+      "expected_sources": [],
+      "kind": "out_of_scope"
+    },
+    {
+      "id": "hipaa",
+      "question": "Are you HIPAA compliant?",
+      "reference": "The documents mention SOC 2 Type II certification and the absence of ISO 27001, but say nothing about HIPAA.",
+      "expected_sources": [],
+      "kind": "out_of_scope"
+    },
+    {
+      "id": "phone-support",
+      "question": "What is the support phone number?",
+      "reference": "The documents do not give a phone number; they describe ticket-based support hours and response targets.",
+      "expected_sources": [],
+      "kind": "out_of_scope"
+    }
+  ]
+}

@@ -205,12 +205,19 @@ class OllamaProvider:
     def _payload(self, messages, system, max_tokens, *, stream: bool) -> dict:
         if system:
             messages = [{"role": "system", "content": system}, *messages]
-        return {
+        payload = {
             "model": self.model,
             "messages": messages,
             "stream": stream,
             "options": {"num_predict": max_tokens or self._settings.ollama_num_predict},
         }
+        # Only sent when disabling: a model with no thinking mode rejects the key.
+        # With thinking on, a reasoning model can spend the whole budget on
+        # `message.thinking` and return an empty answer — the tags it leaks into
+        # `content` instead are stripped on the way out.
+        if not self._settings.ollama_think:
+            payload["think"] = False
+        return payload
 
     async def chat(self, messages, *, system=None, max_tokens=None) -> ChatResult:
         payload = self._payload(messages, system, max_tokens, stream=False)

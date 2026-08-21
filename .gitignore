@@ -34,3 +34,6 @@ evals/results/
 
 # Local outbox written by the send_email tool.
 data/outbox.jsonl
+
+# Evaluation report artifacts; regenerate with `make evals`.
+evals/reports/
