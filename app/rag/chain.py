@@ -27,6 +27,7 @@ from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrou
 
 from app.core.config import Settings, get_settings
 from app.core.llm_provider import ChatMessage, EmbeddingProvider, LLMProvider
+from app.core.observability import observation, update_observation
 from app.rag.retrievers.base import RetrievedChunk, Retriever
 
 # Matches the markers we emit, plus any casing/whitespace variant a document
@@ -162,13 +163,29 @@ class RagChain:
         self._settings = settings or get_settings()
 
     async def retrieve(self, payload: dict) -> list[RetrievedChunk]:
-        [vector] = await self._embedder.embed([payload["question"]])
-        return await self._retriever.similarity_search(
-            vector,
-            tenant_id=payload["tenant_id"],
-            top_k=payload.get("top_k"),
-            filters=payload.get("filters"),
-        )
+        """Embed the question and search. Traced here rather than left to LCEL,
+        because `astream()` takes this path without going through the Runnable."""
+        with observation(
+            "retrieve",
+            as_type="retriever",
+            input=payload["question"],
+            metadata={
+                "tenant_id": payload["tenant_id"],
+                "top_k": payload.get("top_k") or self._settings.retrieval_top_k,
+            },
+        ) as span:
+            [vector] = await self._embedder.embed([payload["question"]])
+            chunks = await self._retriever.similarity_search(
+                vector,
+                tenant_id=payload["tenant_id"],
+                top_k=payload.get("top_k"),
+                filters=payload.get("filters"),
+            )
+            update_observation(
+                span,
+                output=[{"citation": c.citation(), "score": c.score} for c in chunks],
+            )
+            return chunks
 
     def _messages(self, payload: dict) -> list[ChatMessage]:
         return build_prompt(payload["question"], format_context(payload["chunks"]))
@@ -232,12 +249,13 @@ class RagChain:
 def build_rag_chain(settings: Settings | None = None) -> RagChain:
     """Wire the chain from configuration."""
     from app.core.llm_provider import get_embedding_provider, get_llm_provider
+    from app.core.observability import instrument_llm
     from app.rag.retrievers import get_retriever
 
     settings = settings or get_settings()
     return RagChain(
         retriever=get_retriever(settings),
         embedder=get_embedding_provider(settings),
-        llm=get_llm_provider(settings),
+        llm=instrument_llm(get_llm_provider(settings), settings),
         settings=settings,
     )

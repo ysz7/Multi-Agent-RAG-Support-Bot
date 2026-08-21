@@ -421,3 +421,52 @@ async def test_unknown_decision_is_rejected_by_schema(env):
     async with _client(_app(_settings(env), approvals=approvals)) as client:
         response = await client.post("/approvals/t-1", json={"decision": "maybe"})
     assert response.status_code == 422
+
+
+# --- tracing (Phase 12) ----------------------------------------------------
+
+
+async def test_chat_returns_a_trace_id_and_traces_the_request(env, monkeypatch):
+    """The trace id is returned so an answer can be correlated with its trace."""
+    from app.core import observability as obs
+    from tests.test_observability import FakeClient
+
+    client_stub = FakeClient()
+    monkeypatch.setattr(obs, "_client", client_stub)
+    monkeypatch.setattr(obs, "callback_handler", lambda: "handler")
+
+    graph = FakeGraph()
+    async with _client(_app(_settings(env), graph)) as client:
+        response = await client.post("/chat", json={"question": "q?"})
+
+    body = response.json()
+    assert body["trace_id"] == "trace-abc"
+    # The graph run carries both the handler and the trace id into state.
+    assert graph.seen[0]["trace_id"] == "trace-abc"
+    assert client_stub.by_name("chat").ended
+
+
+async def test_chat_works_with_tracing_disabled(env):
+    """No keys configured: no trace id, same answer."""
+    async with _client(_app(_settings(env))) as client:
+        response = await client.post("/chat", json={"question": "q?"})
+    body = response.json()
+    assert body["answer"] == "An answer [1]."
+    assert body["trace_id"] is None
+
+
+async def test_stream_reports_the_trace_id_with_the_answer(env, monkeypatch):
+    from app.core import observability as obs
+    from tests.test_observability import FakeClient
+
+    monkeypatch.setattr(obs, "_client", FakeClient())
+
+    async with _client(_app(_settings(env))) as client:
+        response = await client.post("/chat/stream", json={"question": "q?"})
+
+    answers = [
+        json.loads(line[len("data: ") :])
+        for line in response.text.splitlines()
+        if line.startswith("data: ") and "answer" in line
+    ]
+    assert answers and answers[-1]["trace_id"] == "trace-abc"

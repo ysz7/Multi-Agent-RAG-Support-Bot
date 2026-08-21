@@ -1,6 +1,7 @@
 import pytest
 
 from app.core.config import get_settings
+from app.core.observability import reset_observability
 
 # Env vars Settings reads; cleared before each test so a developer's real
 # environment can never leak into an assertion.
@@ -41,6 +42,9 @@ def env(monkeypatch, tmp_path):
     from picking up the repository's own .env.
     """
     get_settings.cache_clear()
+    # Tracing state is a module global; a client configured by one test must
+    # not follow the suite into the next one.
+    reset_observability()
     for name in _MANAGED_VARS:
         monkeypatch.delenv(name, raising=False)
     monkeypatch.chdir(tmp_path)
@@ -51,3 +55,4 @@ def env(monkeypatch, tmp_path):
 
     yield _set
     get_settings.cache_clear()
+    reset_observability()

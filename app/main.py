@@ -18,6 +18,8 @@ from app.api import chat as chat_routes
 from app.api import health as health_routes
 from app.api.approvals_store import ApprovalStore
 from app.core.config import get_settings
+from app.core.observability import configure_observability
+from app.core.observability import shutdown as shutdown_observability
 from app.graph.build import build_graph, postgres_checkpointer
 
 logger = logging.getLogger("api")
@@ -37,6 +39,9 @@ request body.
 async def lifespan(app: FastAPI):
     settings = get_settings()
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    # Tracing is configured before anything is built, so the wrappers created
+    # below see a live client. It never raises: no Langfuse just means no spans.
+    configure_observability(settings)
 
     async with AsyncExitStack() as stack:
         checkpointer = await stack.enter_async_context(postgres_checkpointer(settings))
@@ -49,12 +54,17 @@ async def lifespan(app: FastAPI):
         app.state.approvals = approvals
 
         logger.info(
-            "ready: llm=%s vector_store=%s auth_mode=%s",
+            "ready: llm=%s vector_store=%s auth_mode=%s tracing=%s",
             settings.llm_provider,
             settings.vector_store,
             settings.auth_mode,
+            "langfuse" if settings.langfuse_enabled else "off",
         )
-        yield
+        try:
+            yield
+        finally:
+            # Flush buffered spans; a dying process would otherwise drop them.
+            shutdown_observability()
 
 
 def create_app() -> FastAPI:

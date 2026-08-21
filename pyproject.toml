@@ -23,8 +23,10 @@ dependencies = [
     "pgvector>=0.3",
     # Ingestion
     "pypdf>=5.0",
-    # Observability
-    "langfuse>=2.53",
+    # Observability. v4 only: the OTEL-based client (`propagate_attributes`,
+    # `start_as_current_observation`) has no equivalent in v2/v3. Its LangChain
+    # integration also imports `langchain` itself, not just `langchain-core`.
+    "langfuse>=4.0",
     # Config
     "pydantic>=2.9",
     "pydantic-settings>=2.6",

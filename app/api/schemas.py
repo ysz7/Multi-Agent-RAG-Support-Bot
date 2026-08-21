@@ -37,6 +37,9 @@ class ChatResponse(BaseModel):
     route: str | None = None
     approval_required: bool = False
     pending_action: dict[str, Any] | None = None
+    # Present only when Langfuse tracing is on; lets a caller correlate an
+    # answer with its trace in the dashboard.
+    trace_id: str | None = None
 
 
 class ApprovalOut(BaseModel):
@@ -64,6 +67,7 @@ class ApprovalResult(BaseModel):
     status: str
     answer: str | None = None
     executed: list[dict[str, Any]] = []
+    trace_id: str | None = None
 
 
 class HealthResponse(BaseModel):

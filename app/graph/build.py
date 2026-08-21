@@ -26,6 +26,7 @@ from langgraph.graph import END, START, StateGraph
 
 from app.core.config import Settings, get_settings
 from app.core.llm_provider import get_llm_provider
+from app.core.observability import instrument_llm, instrument_tools
 from app.graph.approval import (
     ApprovalGateNode,
     DispatchActionNode,
@@ -55,11 +56,13 @@ def build_graph_builder(
     """Wire nodes and edges. Dependencies are injectable so tests need no backends."""
     settings = settings or get_settings()
     chain = chain if chain is not None else build_rag_chain(settings)
-    llm = llm if llm is not None else get_llm_provider(settings)
+    # Only what we construct is instrumented: injected test doubles are left
+    # exactly as the test wrote them.
+    llm = llm if llm is not None else instrument_llm(get_llm_provider(settings), settings)
     if tools is None:
         from app.mcp_server.client import MCPToolClient
 
-        tools = MCPToolClient(settings)
+        tools = instrument_tools(MCPToolClient(settings))
 
     builder = StateGraph(GraphState)
     builder.add_node("router", RouterNode(llm, settings))

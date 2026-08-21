@@ -19,6 +19,7 @@ from langgraph.types import Command
 from app.api.approvals_store import ApprovalStore, PendingApproval
 from app.api.schemas import ApprovalDecision, ApprovalOut, ApprovalResult
 from app.core.auth import Principal, RequireApprove
+from app.core.observability import graph_callbacks, request_trace
 from app.graph.build import GRAPH_RECURSION_LIMIT
 
 logger = logging.getLogger("api.approvals")
@@ -89,11 +90,25 @@ async def decide(
             )
         resume["arguments"] = decision.arguments
 
-    config = {
-        "configurable": {"thread_id": thread_id},
-        "recursion_limit": GRAPH_RECURSION_LIMIT,
-    }
-    final = await graph.ainvoke(Command(resume=resume), config)
+    config = graph_callbacks(
+        {
+            "configurable": {"thread_id": thread_id},
+            "recursion_limit": GRAPH_RECURSION_LIMIT,
+        }
+    )
+    # A separate trace from the chat that proposed the action — it is a separate
+    # request, by a possibly different human — but the same session, so the
+    # dashboard shows proposal and decision together.
+    with request_trace(
+        name=f"approval.{decision.decision}",
+        question=row.question,
+        user_id=principal.user_id,
+        session_id=thread_id,
+        tenant_id=principal.tenant_id,
+        tags=["approval", decision.decision],
+        metadata={"tool": row.tool, "edited": decision.decision == "edit"},
+    ) as trace:
+        final = await graph.ainvoke(Command(resume=resume), config)
 
     outcome = "approved" if decision.decision in {"approve", "edit"} else "rejected"
     await approvals.close(
@@ -109,4 +124,5 @@ async def decide(
         status=outcome,
         answer=final.get("answer"),
         executed=final.get("executed_actions") or [],
+        trace_id=trace.trace_id,
     )
