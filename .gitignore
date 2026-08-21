@@ -37,3 +37,6 @@ data/outbox.jsonl
 
 # Evaluation report artifacts; regenerate with `make evals`.
 evals/reports/
+
+# Background PIDs and logs written by scripts/chat.sh and scripts/ingest.sh.
+.run/
