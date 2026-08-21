@@ -6,10 +6,20 @@ judge bridge that keeps evaluation traffic off OpenAI, the refusal detector, and
 the threshold arithmetic. No model and no database are involved.
 """
 
+import pytest
+
+from evals.compat import patch_langchain_community
+
+# The harness lives behind the `[evals]` extra, which `pip install -e ".[dev]"`
+# does not bring in — skip rather than fail collection; CI installs the extra.
+# The shim has to run first: a bare `import ragas` fails on a *different*
+# missing module (see evals/compat.py), which would look like "not installed".
+patch_langchain_community()
+pytest.importorskip("ragas", reason="install the [evals] extra to run the evaluation tests")
+
 import json
 from pathlib import Path
 
-import pytest
 from pydantic import BaseModel
 
 from evals.judge import JudgeError, ProviderJudge, extract_json

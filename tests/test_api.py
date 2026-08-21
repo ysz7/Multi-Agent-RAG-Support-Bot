@@ -4,10 +4,12 @@ The graph and approval store are replaced with fakes, so these assert HTTP
 behaviour and the security properties rather than model quality.
 """
 
+import importlib.util
 import json
 from datetime import UTC, datetime
 
 import httpx
+import pytest
 from fastapi import FastAPI
 
 from app.api import approvals as approvals_routes
@@ -133,6 +135,14 @@ def _settings(env, **overrides) -> Settings:
     return Settings()
 
 
+# AUTH_MODE=jwt is optional and so is its dependency; without the extra these
+# tests skip instead of failing collection on a `pip install -e ".[dev]"`.
+requires_jwt = pytest.mark.skipif(
+    importlib.util.find_spec("jose") is None,
+    reason="install the [jwt] extra to run the AUTH_MODE=jwt tests",
+)
+
+
 def _token(settings: Settings, *, tenant="default", scopes="chat approvals:write", **extra):
     from datetime import timedelta
 
@@ -214,6 +224,7 @@ async def test_jwt_mode_rejects_a_missing_token(env):
     assert "missing bearer token" in response.json()["detail"]
 
 
+@requires_jwt
 async def test_jwt_mode_rejects_a_forged_token(env):
     settings = _settings(env, AUTH_MODE="jwt", JWT_SECRET="dev-secret")
     from jose import jwt
@@ -228,6 +239,7 @@ async def test_jwt_mode_rejects_a_forged_token(env):
     assert response.status_code == 401
 
 
+@requires_jwt
 async def test_jwt_tenant_claim_drives_retrieval(env):
     settings = _settings(env, AUTH_MODE="jwt", JWT_SECRET="dev-secret")
     graph = FakeGraph()
@@ -243,6 +255,7 @@ async def test_jwt_tenant_claim_drives_retrieval(env):
     assert graph.seen[0]["user_id"] == "alice"
 
 
+@requires_jwt
 async def test_token_without_tenant_claim_is_forbidden(env):
     settings = _settings(env, AUTH_MODE="jwt", JWT_SECRET="dev-secret")
     from datetime import timedelta
@@ -262,6 +275,7 @@ async def test_token_without_tenant_claim_is_forbidden(env):
     assert response.status_code == 403
 
 
+@requires_jwt
 async def test_expired_token_is_rejected(env):
     settings = _settings(env, AUTH_MODE="jwt", JWT_SECRET="dev-secret")
     from datetime import timedelta
@@ -281,6 +295,7 @@ async def test_expired_token_is_rejected(env):
     assert response.status_code == 401
 
 
+@requires_jwt
 async def test_scope_is_enforced_on_approvals(env):
     settings = _settings(env, AUTH_MODE="jwt", JWT_SECRET="dev-secret")
     token = _token(settings, scopes="chat")  # no approvals:write

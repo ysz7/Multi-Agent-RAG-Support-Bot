@@ -6,9 +6,18 @@ the wiring works, not to reproduce a full run, which takes hours on a local
 model.
 """
 
-from pathlib import Path
-
 import pytest
+
+from evals.compat import patch_langchain_community
+
+# The harness lives behind the `[evals]` extra, which `pip install -e ".[dev]"`
+# does not bring in — skip rather than fail collection; CI installs the extra.
+# The shim has to run first: a bare `import ragas` fails on a *different*
+# missing module (see evals/compat.py), which would look like "not installed".
+patch_langchain_community()
+pytest.importorskip("ragas", reason="install the [evals] extra to run the evaluation tests")
+
+from pathlib import Path
 
 from app.core.config import Settings
 from app.core.llm_provider import get_llm_provider

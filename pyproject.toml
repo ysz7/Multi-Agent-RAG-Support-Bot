@@ -71,6 +71,12 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
+[tool.ruff.lint.per-file-ignores]
+# These skip themselves when the [evals] extra is absent, which means a call
+# before the imports. The alternative is a collection error on a plain
+# `pip install -e ".[dev]"`.
+"tests/test_evals*.py" = ["E402"]
+
 [tool.ruff.lint.flake8-bugbear]
 # FastAPI's dependency-injection idiom is a call in an argument default; B008
 # flags it, but it is correct usage here.
