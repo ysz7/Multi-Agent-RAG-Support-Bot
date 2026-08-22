@@ -308,14 +308,6 @@ make lint         # ruff check + ruff format --check
 Tests marked `live` talk to a real Ollama/Claude and a real Postgres; the default CI run is
 `pytest -m "not live"`. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Roadmap
-
-- [ ] Hybrid search (BM25 + vector) with reciprocal rank fusion
-- [ ] Reranker stage before context is sent to the LLM
-- [ ] Prompt-caching for the system prompt / tool definitions (Claude only)
-- [ ] Multi-tenant mode with per-tenant Qdrant collections
-- [ ] RAGAS comparison report: Claude vs. local Ollama model on the same golden dataset
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
